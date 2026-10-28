@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>奢寵有理｜寵物電商 Prototype</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>body{font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}.IN{background:#0f172a;border:1px solid #475569;border-radius:.75rem;padding:.5rem .75rem;color:#f1f5f9;min-width:0}.IN:focus{outline:2px solid #f97316}</style>
+</head>
+<body class="bg-orange-50 text-slate-800">
+<header class="sticky top-0 z-30 bg-white shadow-sm">
+ <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap items-center gap-3">
+  <div onclick="go('home')" class="cursor-pointer flex items-center gap-2 font-extrabold text-xl text-orange-600"><i class="fa-solid fa-paw"></i>奢寵有理</div>
+  <div class="flex bg-slate-100 rounded-full p-1 order-last md:order-none">
+   <button id="bF" onclick="go('home')"></button><button id="bS" onclick="go('shop')"></button>
+   <button id="bB" onclick="setMode('b')"></button>
+  </div>
+  <div id="sbox" class="flex-1 min-w-[150px] relative">
+   <i class="fa-solid fa-magnifying-glass absolute left-3 top-3 text-slate-400"></i>
+   <input id="qi" oninput="S.q=this.value.trim();VW=='shop'?R():go('shop')" placeholder="搜尋商品、成分、品類" class="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:ring-2 focus:ring-orange-400">
+  </div>
+  <div id="acc" class="ml-auto"></div>
+  <button onclick="D(1)" aria-label="開啟購物車" class="relative w-11 h-11 rounded-xl bg-emerald-600 text-white hover:bg-emerald-700">
+   <i class="fa-solid fa-cart-shopping"></i>
+   <span id="bd" class="hidden absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-red-500 text-xs font-bold flex items-center justify-center">0</span>
+  </button>
+ </div>
+</header>
+
+<main>
+<section id="home" class="max-w-7xl mx-auto px-4 py-5 space-y-6"></section>
+<section id="detail" class="hidden max-w-7xl mx-auto px-4 py-5 space-y-4"></section>
+<section id="checkout" class="hidden max-w-5xl mx-auto px-4 py-5 space-y-4"></section>
+<section id="shop" class="hidden max-w-7xl mx-auto px-4 py-5 space-y-4">
+  <div id="ban" class="hidden"></div>
+ <div class="flex flex-wrap items-end justify-between gap-2"><h1 class="text-2xl font-extrabold">全部商品</h1><p id="cnt" class="text-sm text-slate-500"></p></div>
+ <div class="lg:grid lg:grid-cols-[16rem_minmax(0,1fr)] lg:gap-6 items-start">
+  <div id="fbg" onclick="FT(0)" class="hidden fixed inset-0 bg-black/40 z-40 lg:hidden"></div>
+  <aside id="flt" class="hidden lg:block fixed lg:sticky inset-x-0 bottom-0 lg:bottom-auto lg:top-24 z-50 lg:z-auto max-h-[80vh] lg:max-h-[calc(100vh-7rem)] overflow-y-auto rounded-t-2xl lg:rounded-xl bg-white border border-orange-100 p-4"></aside>
+  <div class="min-w-0 space-y-3">
+   <div id="tbr" class="flex flex-wrap items-center gap-2"></div>
+   <div id="chp" class="flex flex-wrap items-center gap-1.5"></div>
+   <div id="grid" class="grid grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-3 sm:gap-4"></div>
+  </div>
+ </div>
+ <div id="cmpbar" class="hidden fixed bottom-4 left-1/2 -translate-x-1/2 z-30 bg-slate-900 text-white rounded-xl shadow-xl px-4 py-3 items-center gap-3 text-sm">
+  <i class="fa-solid fa-scale-balanced text-orange-400"></i><span id="cmpn"></span>
+  <button id="cmpgo" onclick="CM(1)" class="px-3 py-1 rounded-lg bg-orange-500 font-bold disabled:opacity-40">開始對比</button>
+  <button onclick="S.cmp=[];R()" class="text-slate-300 hover:text-white">清空</button>
+ </div>
+</section>
+
+<section id="adm" class="hidden max-w-7xl mx-auto px-4 py-5 space-y-4">
+ <div id="atb" class="flex flex-wrap gap-1 bg-slate-800 p-1 rounded-full w-fit"></div>
+ <div id="t_ov" class="space-y-4">
+ <div class="flex items-center justify-between"><h1 class="text-xl font-extrabold"><i class="fa-solid fa-chart-line text-orange-400 mr-2"></i>營運數據分析看板</h1><button onclick="rst()" class="text-xs px-3 py-1.5 rounded-lg border border-slate-600 text-slate-300 hover:bg-slate-700"><i class="fa-solid fa-rotate-left"></i> 重設數據</button></div>
+ <div id="kpi" class="grid grid-cols-2 lg:grid-cols-4 gap-3"></div>
+ <div id="cards" class="grid lg:grid-cols-3 gap-4"></div>
+ <div class="bg-slate-800 border border-slate-700 rounded-xl p-4"><h3 class="font-bold mb-3"><i class="fa-solid fa-store text-emerald-400 mr-2"></i>門市寄倉提領管理</h3><div id="pk" class="space-y-2 text-sm"></div></div>
+ <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+  <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+   <h3 class="font-bold"><i class="fa-solid fa-triangle-exclamation text-amber-400 mr-2"></i>121 天庫存效期預警</h3>
+   <span id="xs" class="text-xs text-emerald-300"></span>
+  </div>
+  <div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
+   <thead class="text-xs text-slate-400"><tr><th class="p-2">批次</th><th class="p-2">商品</th><th class="p-2">剩餘效期</th><th class="p-2">庫存</th><th class="p-2">原價 → 29 折</th><th class="p-2">狀態</th><th class="p-2">操作</th></tr></thead>
+   <tbody id="xt"></tbody>
+  </table></div>
+ </div>
+ </div>
+
+ <div id="t_mem" class="hidden space-y-4">
+  <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+   <h3 class="font-bold mb-3"><i class="fa-solid fa-user-plus text-emerald-400 mr-2"></i>新增會員</h3>
+   <form onsubmit="addM(event)" class="grid sm:grid-cols-5 gap-2 text-sm">
+    <input id="mN" required maxlength="12" placeholder="暱稱" class="IN">
+    <input id="mE" type="email" required placeholder="Email" class="IN">
+    <input id="mP" type="password" required minlength="6" placeholder="密碼（6 碼以上）" class="IN">
+    <input id="mC" type="number" min="0" value="50" placeholder="毛幣" class="IN">
+    <button class="rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold py-2">新增會員</button>
+   </form>
+  </div>
+  <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+   <h3 class="font-bold">已註冊會員 <span id="mCnt" class="text-slate-400 text-sm"></span></h3>
+   <p class="text-xs text-slate-400 mb-3">點選會員可查看下單歷史</p>
+   <div id="ml" class="space-y-2"></div>
+  </div>
+ </div>
+
+ <div id="t_inv" class="hidden space-y-4">
+  <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+   <h3 class="font-bold mb-3"><i class="fa-solid fa-box-open text-emerald-400 mr-2"></i>新增商品／入庫</h3>
+   <form onsubmit="addP(event)" class="grid sm:grid-cols-4 lg:grid-cols-9 gap-2 text-sm">
+    <input id="pN" required placeholder="商品名稱" class="IN sm:col-span-2">
+    <select id="pC" class="IN"><option>乾糧</option><option>罐頭</option><option>貓砂</option><option>保健</option></select>
+    <select id="pS" class="IN"><option>狗狗</option><option>貓貓</option></select>
+    <input id="pP" type="number" min="1" required placeholder="售價" class="IN">
+    <input id="pO" type="number" min="1" placeholder="原價（選填）" class="IN">
+    <input id="pQ" type="number" min="1" required placeholder="規格數量" class="IN">
+    <input id="pK" type="number" min="0" required placeholder="庫存" class="IN">
+    <button class="rounded-xl bg-emerald-600 hover:bg-emerald-700 font-bold py-2">新增</button>
+   </form>
+  </div>
+  <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+   <h3 class="font-bold mb-3">庫存清單 <span class="text-xs text-slate-400">（直接修改數字即可調整庫存，低於 20 會標示警示）</span></h3>
+   <div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
+    <thead class="text-xs text-slate-400"><tr><th class="p-2">商品</th><th class="p-2">品類</th><th class="p-2">物種</th><th class="p-2">售價</th><th class="p-2">庫存</th><th class="p-2">操作</th></tr></thead>
+    <tbody id="il"></tbody>
+   </table></div>
+  </div>
+ </div>
+
+ <div id="t_ord" class="hidden space-y-4">
+  <div class="bg-slate-800 border border-slate-700 rounded-xl p-4">
+   <h3 class="font-bold mb-3"><i class="fa-solid fa-receipt text-orange-400 mr-2"></i>目前下單狀態</h3>
+   <div id="oc" class="flex flex-wrap gap-2 mb-3"></div>
+   <div class="overflow-x-auto"><table class="w-full text-sm text-left whitespace-nowrap">
+    <thead class="text-xs text-slate-400"><tr><th class="p-2">訂單</th><th class="p-2">時間</th><th class="p-2">會員</th><th class="p-2">商品</th><th class="p-2">實付</th><th class="p-2">狀態</th></tr></thead>
+    <tbody id="ol"></tbody>
+   </table></div>
+  </div>
+ </div>
+</section>
+</main>
+
+<div id="ov" onclick="D(0)" class="hidden fixed inset-0 bg-black/40 z-40"></div>
+<aside id="dr" class="fixed top-0 right-0 h-full w-full max-w-md bg-white text-slate-800 z-50 shadow-2xl translate-x-full transition-transform duration-300 flex flex-col">
+ <div class="flex items-center justify-between p-4 border-b"><h2 class="font-extrabold text-lg"><i class="fa-solid fa-cart-shopping text-emerald-600 mr-2"></i>購物車</h2><button onclick="D(0)" aria-label="關閉" class="w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div>
+ <div class="px-4 pt-3">
+  <p id="pmsg" class="text-sm font-bold text-emerald-700"></p>
+  <div class="h-2.5 rounded-full bg-slate-200 mt-1 overflow-hidden"><div id="pbar" class="h-full bg-gradient-to-r from-orange-400 to-emerald-500 transition-all duration-500" style="width:0"></div></div>
+ </div>
+ <div id="ci" class="flex-1 overflow-y-auto p-4 space-y-3"></div>
+ <div class="p-4 border-t space-y-2 text-sm bg-orange-50">
+  <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="ck" onchange="S.coin=this.checked;RC()" class="w-4 h-4 accent-orange-500"><span><i class="fa-solid fa-coins text-amber-500"></i> 使用毛幣折抵（餘額 <b id="cbal"></b> 點，1 點 = $1）<b id="chint" class="ml-1 text-orange-600"></b></span></label>
+  <label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" id="dn" onchange="S.dn=this.checked;RC()" class="w-4 h-4 accent-rose-500"><span><i class="fa-solid fa-heart text-rose-500"></i> 愛心捐罐 +$35（捐出 1 罐主食罐給收容毛孩）</span></label>
+  <div id="sum" class="space-y-1"></div>
+  <button id="cko" onclick="goCk()" class="w-full py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-extrabold">前往結帳</button>
+ </div>
+</aside>
+
+<div id="cm" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 p-4">
+ <div class="bg-white text-slate-800 rounded-xl max-w-3xl w-full max-h-[85vh] overflow-auto p-5">
+  <div class="flex items-center justify-between mb-3"><h2 class="font-extrabold text-lg"><i class="fa-solid fa-scale-balanced text-orange-500 mr-2"></i>商品規格對比</h2><button onclick="CM(0)" aria-label="關閉" class="w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div>
+  <div id="ct" class="overflow-x-auto"></div>
+ </div>
+</div>
+<div id="am" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 p-4">
+ <div class="bg-white text-slate-800 rounded-xl w-full max-w-sm p-5">
+  <div class="flex items-center justify-between mb-3"><h2 class="font-extrabold text-lg"><i class="fa-solid fa-paw text-orange-500 mr-2"></i>歡迎來到奢寵有理</h2><button onclick="AM(0)" aria-label="關閉" class="w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="flex bg-slate-100 rounded-full p-1 mb-3"><button type="button" id="tIn" onclick="AM(1,'in')">登入</button><button type="button" id="tUp" onclick="AM(1,'up')">註冊新會員</button></div>
+  <form onsubmit="authGo(event)" class="space-y-3 text-sm">
+   <label id="fN" class="hidden">暱稱<input id="aN" maxlength="12" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"></label>
+   <label class="block">Email<input id="aE" type="email" required autocomplete="email" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"></label>
+   <label class="block">密碼（至少 6 碼）<input id="aP" type="password" required minlength="6" class="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400"></label>
+   <p id="aErr" class="text-red-600 text-xs min-h-[1rem]"></p>
+   <button id="aGo" class="w-full py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-extrabold">登入</button>
+  </form>
+  <div class="mt-3 pt-3 border-t text-xs text-slate-500 space-y-1.5"><p>示範帳號（點擊自動填入）</p>
+   <div class="flex flex-wrap gap-2"><button type="button" onclick="demo(0)" class="px-2 py-1 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100"><i class="fa-regular fa-user"></i> 會員 demo@shechong.tw</button><button type="button" onclick="demo(1)" class="px-2 py-1 rounded-lg bg-slate-100 text-slate-700 hover:bg-slate-200"><i class="fa-solid fa-user-shield"></i> 管理員 admin@shechong.tw</button></div>
+  </div>
+ </div>
+</div>
+<div id="mb" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 p-4"><div class="bg-white text-slate-800 rounded-xl max-w-2xl w-full max-h-[88vh] overflow-auto p-5"><div class="flex items-center justify-between mb-3"><h2 class="font-extrabold text-lg"><i class="fa-regular fa-id-card text-orange-500 mr-2"></i>會員中心</h2><button onclick="MBx()" aria-label="關閉" class="w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div><div id="mbT" class="flex flex-wrap gap-1 bg-slate-100 p-1 rounded-full mb-4"></div><div id="mbB" class="space-y-3"></div></div></div>
+<div id="cr" class="hidden fixed inset-0 z-[55] items-center justify-center bg-black/50 p-4"><div class="bg-white text-slate-800 rounded-xl max-w-sm w-full p-5"><div class="flex items-center justify-between mb-1"><h2 class="font-extrabold text-lg">取消訂單</h2><button onclick="CXc()" aria-label="關閉" class="w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div><p id="crS" class="text-xs text-slate-500 mb-3"></p><div id="crL" class="space-y-2 text-sm"></div><textarea id="crT" maxlength="100" placeholder="其他原因（選填）" class="hidden mt-2 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"></textarea><p id="crE" class="text-red-600 text-xs min-h-[1rem] mt-1"></p><div class="flex gap-2 mt-2"><button onclick="CXc()" class="flex-1 py-2 rounded-xl border font-bold hover:bg-slate-50">保留訂單</button><button onclick="CXok()" class="flex-1 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white font-bold">確認取消</button></div></div></div>
+<div id="om" class="hidden fixed inset-0 z-50 items-center justify-center bg-black/50 p-4"><div class="bg-white text-slate-800 rounded-xl max-w-lg w-full max-h-[85vh] overflow-auto p-5"><div class="flex items-center justify-between mb-3"><h2 id="omT" class="font-extrabold text-lg"></h2><button onclick="MC()" aria-label="關閉" class="w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div><div id="omB" class="space-y-3"></div></div></div>
+<div id="ts" class="fixed top-20 left-1/2 -translate-x-1/2 z-[60] bg-slate-900 text-white px-4 py-2 rounded-xl text-sm opacity-0 pointer-events-none transition-opacity"></div>
+
+<script>
+const $=i=>document.getElementById(i);
+const MD=['單次購買','門市分批寄倉取','定期自動補貨'];
+const PR={'全部':()=>1,'$500 以下':x=>x<=500,'$501–1,000':x=>x>500&&x<=1000,'$1,000 以上':x=>x>1000};
+const FL={zone:['全部','一般商品','即期出清區'],cat:['全部','乾糧','罐頭','貓砂','保健'],sp:['全部','狗狗','貓貓'],age:['全部','幼年','成年','高齡熟齡'],fn:['全部','日常主食','腸胃保健','關節照護','處方專區'],pr:Object.keys(PR),md:MD};
+const LB={zone:'商品區',cat:'品類',sp:'物種',age:'年齡／生命階段',fn:'特殊機能',pr:'價格',md:'購買模式'};
+const SO={rec:['推薦排序',(a,b)=>(b.stk>0)-(a.stk>0)],lo:['價格：低到高',(a,b)=>a.p-b.p],hi:['價格：高到低',(a,b)=>b.p-a.p],un:['單位價格最低',(a,b)=>a.p/a.q-b.p/b.q],off:['折扣最多',(a,b)=>(1-b.p/b.o)-(1-a.p/a.o)],exp:['效期最長',(a,b)=>b.d-a.d]};
+const G={乾糧:'from-orange-100 to-amber-200',罐頭:'from-emerald-100 to-lime-200',貓砂:'from-sky-100 to-cyan-200',保健:'from-rose-100 to-pink-200'};
+const P=[
+{id:1,n:'無穀鮮雞犬乾糧 6kg',c:'乾糧',s:'狗狗',a:'成年',f:'日常主食',p:1260,o:1480,u:'每公斤',q:6,d:150,pc:3,i:'去骨雞肉 32%、地瓜、豌豆、蔓越莓',t:'成犬／中大型犬',e:'🐕',st:1,sub:1},
+{id:2,n:'幼貓成長配方乾糧 2kg',c:'乾糧',s:'貓貓',a:'幼年',f:'日常主食',p:680,o:780,u:'每公斤',q:2,d:135,pc:3,i:'雞肉、鮭魚、初乳、牛磺酸',t:'4 月齡內幼貓／懷孕母貓',e:'🐱',st:1,sub:1},
+{id:3,n:'熟齡腸胃低敏犬糧 3kg',c:'乾糧',s:'狗狗',a:'高齡熟齡',f:'腸胃保健',p:980,o:1180,u:'每公斤',q:3,d:128,pc:4,i:'鴨肉、燕麥、南瓜、益生元',t:'7 歲以上敏感腸胃犬',e:'🐶',st:1,sub:1},
+{id:4,n:'豆腐礦砂混合貓砂 6L×4包',c:'貓砂',s:'貓貓',a:'全齡',f:'日用',p:520,o:620,u:'每公升',q:24,d:365,pc:2,i:'豆腐渣、膨潤土、活性碳',t:'全齡貓／多貓家庭',e:'🪣',st:1},
+{id:5,n:'雞肉鮮蔬主食罐 85g×24罐',c:'罐頭',s:'狗狗',a:'全齡',f:'日常主食',p:840,o:980,u:'每罐',q:24,d:140,pc:5,i:'雞肉、胡蘿蔔、南瓜、肉湯',t:'全齡犬',e:'🥫',st:1,sub:1},
+{id:6,n:'鮪魚白身主食罐 80g×24罐',c:'罐頭',s:'貓貓',a:'成年',f:'日常主食',p:960,o:1080,u:'每罐',q:24,d:125,pc:5,i:'鮪魚、白身魚、雞湯、牛磺酸',t:'成貓／挑嘴貓',e:'🐟',st:1,sub:1},
+{id:7,n:'關節保健葡萄糖胺錠 60錠',c:'保健',s:'狗狗',a:'高齡熟齡',f:'關節照護',p:890,o:1190,u:'每錠',q:60,d:420,pc:6,i:'葡萄糖胺、軟骨素、MSM、綠唇貽貝',t:'熟齡犬／大型犬',e:'💊',sub:1},
+{id:8,n:'益生菌腸胃保健粉 30包',c:'保健',s:'貓貓',a:'成年',f:'腸胃保健',p:720,o:860,u:'每包',q:30,d:240,pc:5,i:'乳酸菌 100 億、果寡糖、酵母萃取',t:'軟便／換糧期貓咪',e:'🧪',sub:1},
+{id:9,n:'腎臟護理處方糧 2kg',c:'乾糧',s:'貓貓',a:'高齡熟齡',f:'處方專區',p:1180,o:1180,u:'每公斤',q:2,d:180,pc:2,i:'低磷蛋白質、Omega-3、鉀',t:'需獸醫處方之腎病貓',e:'🩺',rx:1}
+];
+const S={cat:'全部',pr:'全部',st:false,so:'rec',dv:'宅配到府',pay:'信用卡',inv:'雲端發票',zone:'全部',sp:'全部',age:'全部',fn:'全部',md:MD[0],q:'',cmp:[],cart:[],coin:false,pm:{}};
+let COIN=0,LAST={tot:0,dc:0,rew:0},tt,chd=0;
+const M=p=>[MD[0],...(p.st?[MD[1]]:[]),...(p.sub?[MD[2]]:[])];
+const gm=p=>S.pm[p.id]||(M(p).includes(S.md)?S.md:MD[0]);
+const up=c=>Math.round(c.p.p*(c.m==MD[2]?.88:1));
+const ok=p=>(S.zone=='全部'||(S.zone=='即期出清區')==!!p.clr)&&(S.cat=='全部'||p.c==S.cat)&&PR[S.pr](p.p)&&(!S.st||p.stk>0)&&(S.sp=='全部'||p.s==S.sp)&&(S.age=='全部'||p.a=='全齡'||p.a==S.age)&&(S.fn=='全部'||p.f==S.fn)&&M(p).includes(S.md)&&(!S.q||(p.n+p.c+p.i+p.t).includes(S.q));
+const tb=a=>'px-3 py-1.5 rounded-full text-sm font-semibold transition '+(a?'bg-orange-500 text-white shadow':'text-slate-600 hover:text-orange-600');
+
+const ld=(k,f)=>{try{return JSON.parse(localStorage.getItem(k))||f}catch(e){return f}};
+const sv=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const USERS=ld('sc_users',[{n:'示範會員',e:'demo@shechong.tw',pw:'123456',coin:120,r:'member'},{n:'營運管理員',e:'admin@shechong.tw',pw:'admin123',coin:0,r:'admin'}]);
+let U=USERS.find(u=>u.e==ld('sc_sess',''))||null,AT='in';
+COIN=U?U.coin:0;
+
+function RA(){
+ $('acc').innerHTML=U?`<div class="flex items-center gap-2"><div class="w-9 h-9 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center">${esc(U.n[0])}</div><div class="hidden sm:block leading-tight"><p class="text-sm font-bold">${esc(U.n)}${U.r=='admin'?' <span class="text-[10px] px-1.5 py-0.5 rounded-full bg-slate-800 text-white">管理員</span>':''}</p><p class="text-xs text-amber-600"><i class="fa-solid fa-coins"></i> 毛幣 ${COIN} 點</p></div><button onclick="MB('p')" class="h-11 px-3 rounded-xl border border-slate-200 text-sm font-semibold hover:bg-slate-100"><i class="fa-regular fa-id-card"></i> <span class="hidden sm:inline">會員中心</span></button><button onclick="out()" class="h-11 px-3 rounded-xl border border-slate-200 text-sm font-semibold hover:bg-slate-100"><i class="fa-solid fa-right-from-bracket"></i> 登出</button></div>`:`<button onclick="AM(1,'in')" class="h-11 px-4 rounded-xl border-2 border-orange-500 text-orange-600 font-bold text-sm hover:bg-orange-50"><i class="fa-regular fa-user"></i> 登入／註冊</button>`;SV();
+}
+function AM(o,t){
+ const m=$('am');m.classList.toggle('hidden',!o);m.classList.toggle('flex',!!o);
+ if(!o)return;
+ AT=t||AT;const up=AT=='up';
+ $('tIn').className=tb(!up)+' flex-1';$('tUp').className=tb(up)+' flex-1';
+ $('fN').className=up?'block':'hidden';$('aN').required=up;
+ $('aGo').textContent=up?'建立帳號並登入':'登入';$('aErr').textContent='';
+}
+function authGo(ev){
+ ev.preventDefault();
+ const e=$('aE').value.trim().toLowerCase(),pw=$('aP').value,n=$('aN').value.trim(),er=$('aErr'),f=USERS.find(u=>u.e==e);
+ if(AT=='up'){
+  if(f)return er.textContent='此 Email 已註冊，請直接登入';
+  const u={n,e,pw,coin:50,r:'member'};USERS.push(u);sv('sc_users',USERS);login(u);T('註冊成功！贈送新會員毛幣 50 點');
+ }else{
+  if(!f||f.pw!=pw)return er.textContent='Email 或密碼錯誤，請再試一次';
+  login(f);T('歡迎回來，'+f.n);
+ }
+ ev.target.reset();
+}
+function login(u){U=u;COIN=u.coin;sv('sc_sess',u.e);AM(0);RA();RC();R()}
+function out(){
+ U=null;COIN=0;S.coin=false;$('ck').checked=false;sv('sc_sess','');RA();RC();MBx();R();
+ if(!$('adm').classList.contains('hidden'))setMode('f');
+ T('已登出');
+}
+function demo(i){AM(1,'in');$('aE').value=USERS[i].e;$('aP').value=USERS[i].pw}
+
+const CH={},ORD=ld('sc_orders',[]),ST=ld('sc_st',{sess:0,carts:0,rs:[0,0,0]}),CT=['乾糧','罐頭','貓砂','保健'];
+ST.sess++;sv('sc_st',ST);let cf=0;
+
+function UA(){
+ const O=ORD.filter(o=>o.s!='已取消'),n=O.length,gmv=O.reduce((s,o)=>s+o.sub,0),pc=x=>Math.round(x*10)/10+'%';
+ const cv=ST.sess?Math.min(100,n/ST.sess*100):0,ab=ST.carts?Math.max(0,(ST.carts-n)/ST.carts*100):0;
+ $('kpi').innerHTML=[['GMV 總營收','NT$ '+gmv.toLocaleString(),`共 ${n} 筆訂單`,'fa-sack-dollar','text-orange-400'],['平均客單價 AOV','NT$ '+(n?Math.round(gmv/n):0).toLocaleString(),'GMV ÷ 訂單數','fa-receipt','text-emerald-400'],['轉換率',pc(cv),`${n} 筆訂單 ÷ ${ST.sess} 次造訪`,'fa-bullseye','text-amber-400'],['購物車放棄率',pc(ab),`${ST.carts} 次加入購物車，${n} 次結帳`,'fa-cart-arrow-down','text-rose-400']].map(k=>`<div class="bg-slate-800 border border-slate-700 rounded-xl p-4"><div class="flex justify-between items-center text-xs text-slate-400">${k[0]}<i class="fa-solid ${k[3]} ${k[4]} text-lg"></i></div><p class="text-2xl font-extrabold mt-1">${k[1]}</p><p class="text-xs text-slate-400 mt-1">${k[2]}</p></div>`).join('');
+ const sc=(id,lab,ds,z)=>{const c=CH[id];if(lab)c.data.labels=lab;ds.forEach((d,i)=>c.data.datasets[i].data=d);c.update('none');$('n_'+id).className=z?'absolute inset-0 flex items-center justify-center text-slate-500 text-sm':'hidden'};
+ const ky=d=>d.getFullYear()*12+d.getMonth(),ms=[...Array(6)].map((_,i)=>{const d=new Date();return new Date(d.getFullYear(),d.getMonth()-5+i,1)});
+ const mo=ms.map(d=>O.filter(o=>ky(new Date(o.t))==ky(d)));
+ CH.cA.data.datasets[0].label='營收（NT$）';CH.cA.data.datasets[1].label='訂單數';
+ sc('cA',ms.map(d=>(d.getMonth()+1)+'月'),[mo.map(a=>a.reduce((s,o)=>s+o.sub,0)),mo.map(a=>a.length)],!n);
+ const us={};O.forEach(o=>(us[o.u]=us[o.u]||[]).push(o.t));
+ const sg=[0,0,0,0,0];
+ Object.values(us).forEach(t=>{const d=(Date.now()-Math.max(...t))/864e5,k=t.length;sg[d>60?4:k>=3?0:k==2?1:d>=20?2:3]++});
+ sc('cB',0,[sg],!n);
+ const rp=CT.map(c=>{const iv=[];Object.keys(us).forEach(u=>{const t=O.filter(o=>o.u==u&&o.items.some(i=>i.c==c)).map(o=>o.t).sort((a,b)=>a-b);for(let k=1;k<t.length;k++)iv.push((t[k]-t[k-1])/864e5)});if(!iv.length)return'資料不足';const v=iv.reduce((a,b)=>a+b,0)/iv.length;return v<1?'不到 1 天':Math.round(v)+' 天'});
+ $('cB').parentElement.nextElementSibling.innerHTML=CT.map((c,k)=>`<span class="px-2 py-1 rounded-full bg-slate-700">${c} 回購週期 <b class="text-orange-400">${rp[k]}</b></span>`).join('');
+ const L=O.flatMap(o=>o.items.map(i=>({...i,u:o.u})));
+ const rn=CT.map(c=>{const m={};L.filter(i=>i.c==c&&i.m==MD[2]).forEach(i=>m[i.u]=(m[i.u]||0)+1);const v=Object.values(m);return v.length?Math.round(v.filter(x=>x>1).length/v.length*100):0});
+ const pk=CT.map(c=>{const a=L.filter(i=>i.c==c&&i.m==MD[1]),t=a.reduce((s,i)=>s+i.q,0);return t?Math.round(a.reduce((s,i)=>s+i.pk,0)/t*100):0});
+ sc('cC',0,[rn,pk],!n);
+ sc('cD',['未達免運門檻就離開','結帳時被要求登入','移除購物車商品'],[ST.rs],ST.rs.every(x=>!x));
+ const dsc=L.reduce((s,i)=>s+((i.op??i.pr)-i.pr)*i.q,0),dcs=O.reduce((s,o)=>s+o.dc,0),rws=O.reduce((s,o)=>s+o.rew,0),dn=O.reduce((s,o)=>s+o.don,0),cost=dcs+rws+dsc;
+ sc('cE',['毛幣折抵','毛幣回饋發放','定期購 88 折讓利','愛心捐罐金額'],[[dcs,rws,dsc,dn]],!(cost+dn));
+ $('cE').parentElement.nextElementSibling.innerHTML=`行銷成本 <b class="text-amber-400">$${cost.toLocaleString()}</b>｜行銷 ROI <b class="text-emerald-400">${cost?(gmv/cost).toFixed(1)+'x':'—'}</b>｜累計捐罐 <b class="text-rose-400">${Math.round(dn/35)}</b> 罐`;
+ const pl=O.flatMap((o,oi)=>o.items.map((i,li)=>[ORD.indexOf(o),li,i,o.u])).filter(x=>x[2].m==MD[1]);
+ $('pk').innerHTML=pl.length?pl.map(([oi,li,i,u])=>`<div class="flex flex-wrap items-center justify-between gap-2 p-2 rounded-lg bg-slate-700/50"><span>#${oi+1}｜${esc(u)}｜${esc(i.n)} ×${i.q}｜已提領 <b class="text-emerald-400">${i.pk}/${i.q}</b></span><button ${i.pk>=i.q?'disabled':''} onclick="pickup(${oi},${li})" class="px-3 py-1 rounded-lg text-xs font-bold ${i.pk>=i.q?'bg-slate-600 text-slate-400':'bg-emerald-600 hover:bg-emerald-700 text-white'}">${i.pk>=i.q?'✓ 已領完':'登記提領 1 單位'}</button></div>`).join(''):'<p class="text-slate-500">尚無門市寄倉訂單</p>';
+}
+function pickup(oi,li){ORD[oi].items[li].pk++;sv('sc_orders',ORD);UA();T('已登記門市提領 1 單位')}
+function rst(){ORD.length=0;ST.sess=1;ST.carts=0;ST.rs=[0,0,0];sv('sc_orders',ORD);sv('sc_st',ST);cf=0;UA();AU();T('後台數據已重設為 0')}
+
+const SB={待出貨:'bg-amber-100 text-amber-700',已出貨:'bg-sky-100 text-sky-700',已完成:'bg-emerald-100 text-emerald-700',已取消:'bg-slate-200 text-slate-500'},STS=Object.keys(SB);
+const PS=ld('sc_prod',null);if(PS){P.length=0;P.push(...PS)}
+P.forEach(p=>{if(p.stk==null)p.stk=({1:200,2:100,3:50,5:70,6:110})[p.id]||60});sv('sc_prod',P);
+let AB='ov';
+const fd=t=>new Date(t).toLocaleString('zh-TW',{hour12:false});
+
+function OH(l,m,c){
+ return l.length?l.slice().reverse().map(o=>`<div class="border rounded-xl p-3 text-sm"><div class="flex justify-between items-center gap-2"><b>#${ORD.indexOf(o)+1}｜${fd(o.t)}</b><span class="px-2 py-0.5 rounded-full text-xs font-bold ${SB[o.s||'待出貨']}">${o.s||'待出貨'}</span></div><ul class="mt-1 text-xs text-slate-600 list-disc pl-4">${o.items.map(i=>`<li>${esc(i.n)} ×${i.q}（${i.m}）$${(i.pr*i.q).toLocaleString()}</li>`).join('')}</ul>${o.rc?`<p class="text-xs text-slate-500 mt-1">${esc(o.rc.dv)}｜${esc(o.rc.pay)}｜運費 ${o.ship?'$'+o.ship:'免運'}</p>`:''}${o.cr?`<p class="text-xs text-rose-600 mt-1">取消原因：${esc(o.cr)}</p>`:''}<div class="flex items-center justify-between mt-2">${c&&canX(o)?`<button onclick="CX(${ORD.indexOf(o)})" class="px-3 py-1 rounded-lg border border-red-300 text-red-500 text-xs font-bold hover:bg-red-50">取消訂單</button>`:c&&o.s=='已出貨'?'<span class="text-xs text-slate-400">已出貨，無法自行取消</span>':'<span></span>'}<b class="text-orange-600">實付 $${o.tot.toLocaleString()}</b></div></div>`).join(''):'<p class="text-center text-slate-400 py-10">'+(m||'還沒有下單紀錄')+'</p>';
+}
+function MO(e,me){
+ const u=USERS.find(x=>x.e==e);
+ $('omT').textContent=me?'我的下單歷史':(u?u.n:e)+' 的下單歷史';
+ $('omB').innerHTML=OH(ORD.filter(o=>o.u==e));
+ $('om').classList.remove('hidden');$('om').classList.add('flex');
+}
+function MC(){$('om').classList.add('hidden');$('om').classList.remove('flex')}
+
+
+let VW='home',PDI=0,BK=0,CI=-1;
+const CR=['改買其他商品／規格選錯了','價格比其他通路貴','運費太高','不小心重複下單','等太久，不需要了','其他原因'];
+const canX=o=>(o.s||'待出貨')=='待出貨'&&o.items.every(i=>!i.pk);
+function SV(){
+ ['home','shop','detail','checkout'].forEach(k=>$(k).classList.toggle('hidden',!!BK||VW!=k));
+ $('adm').classList.toggle('hidden',!BK);
+ const ad=U&&U.r=='admin';
+ $('bF').className=tb(!BK&&VW=='home');$('bS').className=tb(!BK&&VW!='home');$('bB').className=tb(BK)+(ad?'':' hidden');
+}
+function go(v,id){if(BK)setMode('f');VW=v;if(id)PDI=id;R();SV();if(v=='checkout')RK();window.scrollTo(0,0)}
+function gq(c){rsF();S.cat=c;go('shop')}
+function gz(z){rsF();S.zone=z;go('shop')}
+function cx(o,r){
+ o.items.forEach(x=>{const p=P.find(y=>y.id==x.id);if(p)p.stk+=x.q});
+ const u=USERS.find(y=>y.e==o.u);
+ if(u){u.coin=Math.max(0,u.coin+o.dc-o.rew);sv('sc_users',USERS);if(U&&U.e==u.e)COIN=u.coin}
+ o.s='已取消';o.cr=r;sv('sc_orders',ORD);sv('sc_prod',P);
+}
+function CX(i){
+ const o=ORD[i];
+ if(!o||!U||o.u!=U.e||!canX(o))return T('此訂單目前無法取消');
+ CI=i;
+ $('crS').textContent=`訂單 #${i+1}｜實付 $${o.tot.toLocaleString()}。取消後庫存會釋出，折抵的毛幣會退還${o.rew?'，已發放的回饋毛幣 '+o.rew+' 點會扣回':''}。請選擇取消原因：`;
+ $('crL').innerHTML=CR.map((r,k)=>`<label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-orange-50"><input type="radio" name="cr" value="${k}" onchange="$('crT').classList.toggle('hidden',this.value!=${CR.length-1})" class="accent-orange-500">${r}</label>`).join('');
+ $('crT').value='';$('crT').classList.add('hidden');$('crE').textContent='';
+ const m=$('cr');m.classList.remove('hidden');m.classList.add('flex');
+}
+function CXc(){const m=$('cr');m.classList.add('hidden');m.classList.remove('flex')}
+function CXok(){
+ const r=document.querySelector('input[name=cr]:checked');
+ if(!r)return $('crE').textContent='請選擇一個取消原因';
+ const k=+r.value,t=$('crT').value.trim(),o=ORD[CI];
+ if(!o||!canX(o)){CXc();return T('此訂單目前無法取消')}
+ cx(o,CR[k]+(k==CR.length-1&&t?'：'+t:''));
+ CXc();RA();RC();MB();R();T('訂單已取消，庫存與毛幣已回復');
+}
+function RH(){
+ const cl=P.filter(p=>p.clr&&p.stk>0).slice(0,4),ft=P.filter(p=>!p.clr&&p.stk>0).slice(0,4);
+ $('home').innerHTML=`<div class="rounded-2xl p-6 md:p-10 text-white bg-gradient-to-r from-orange-500 to-emerald-600 flex flex-col md:flex-row items-center gap-6"><div class="flex-1 space-y-3"><h1 class="text-3xl md:text-4xl font-extrabold leading-tight">給毛孩最好的，<br>也要買得安心</h1><p class="text-white/90">每一包都保證 121 天以上效期，本島滿 $1,000 免運，毛幣回饋還能折抵下一單。</p><div class="flex flex-wrap gap-2 pt-1"><button onclick="gz('全部')" class="px-5 py-2.5 rounded-xl bg-white text-orange-600 font-extrabold hover:bg-orange-50">逛全部商品</button><button onclick="gz('即期出清區')" class="px-5 py-2.5 rounded-xl border-2 border-white font-bold hover:bg-white/10">即期出清 29 折</button></div></div><div class="text-7xl md:text-8xl" aria-hidden="true">🐕🐱</div></div>
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-3">${[['乾糧','🦴'],['罐頭','🥫'],['貓砂','🪣'],['保健','💊']].map(c=>`<button onclick="gq('${c[0]}')" class="rounded-xl bg-white border border-orange-100 p-4 text-center hover:shadow-md transition"><div class="text-3xl">${c[1]}</div><p class="font-bold mt-1">${c[0]}</p></button>`).join('')}</div>
+ ${cl.length?`<section><div class="flex items-center justify-between mb-3"><h2 class="font-extrabold text-lg">🔥 即期出清專區 <span class="text-sm text-rose-600 font-semibold">29 折限量</span></h2><button onclick="gz('即期出清區')" class="text-sm text-orange-600 font-bold">看全部</button></div><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">${cl.map(card).join('')}</div></section>`:''}
+ <section><div class="flex items-center justify-between mb-3"><h2 class="font-extrabold text-lg">精選商品</h2><button onclick="gz('全部')" class="text-sm text-orange-600 font-bold">看全部</button></div><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">${ft.map(card).join('')}</div></section>
+ <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm font-semibold text-emerald-800">${[['fa-truck-fast','本島滿 $1,000 免運'],['fa-shield-heart','121天效期品質承諾'],['fa-store','門市跨店分批隨時取'],['fa-rotate','定期購月月送 88 折']].map(b=>`<div class="flex items-center gap-2 bg-emerald-50 rounded-xl p-3"><i class="fa-solid ${b[0]}"></i>${b[1]}</div>`).join('')}</div>`;
+}
+function RD(){
+ const p=P.find(x=>x.id==PDI);
+ if(!p){VW='shop';R();return}
+ const off=Math.round((1-p.p/p.o)*100),ms=M(p),cur=gm(p),hf=U&&(U.fav||[]).includes(p.id),rel=P.filter(x=>x.c==p.c&&x.id!=p.id).slice(0,4);
+ const rows=[['分類',`${p.c}｜${p.s}｜${p.a}｜${p.f}`],['成分',esc(p.i)],['適用對象',esc(p.t)],['效期',`尚餘 ${p.d} 天`],['單位價格',`${p.u} <b class="text-orange-600">$${Math.round(p.p/p.q)}</b>（${p.q}${p.u.slice(1)}）`],['庫存',p.stk>0?`現貨 ${p.stk}${p.stk<20?'（即將售完）':''}`:'<b class="text-red-500">缺貨</b>'],['毛幣回饋',p.pc?p.pc+'%':'此商品不適用']];
+ $('detail').innerHTML=`<button onclick="go('shop')" class="text-sm text-slate-500 hover:text-orange-600"><i class="fa-solid fa-chevron-left"></i> 返回商品列表</button>
+ <div class="grid md:grid-cols-2 gap-6 bg-white rounded-2xl border border-orange-100 p-5">
+  <div class="relative rounded-xl bg-gradient-to-br ${G[p.c]} flex items-center justify-center text-[8rem] min-h-[260px]">${p.e}${off?`<span class="absolute top-3 right-3 bg-red-500 text-white text-sm font-bold px-3 py-1 rounded-full">-${off}%</span>`:''}</div>
+  <div class="space-y-3">
+   <div class="flex flex-wrap gap-1 text-[11px] font-semibold">${p.clr?'<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700"><i class="fa-solid fa-fire"></i> 即期出清 29 折</span>':'<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700"><i class="fa-solid fa-shield-heart"></i> 121天效期保證</span>'}${p.rx?'<span class="px-2 py-0.5 rounded-full bg-rose-100 text-rose-700"><i class="fa-solid fa-user-doctor"></i> 需獸醫處方</span>':''}</div>
+   <h1 class="text-2xl font-extrabold leading-snug">${esc(p.n)}</h1>
+   <div class="flex items-end gap-2"><span class="text-3xl font-extrabold text-orange-600">$${p.p.toLocaleString()}</span>${off?`<s class="text-sm text-slate-400 mb-1">$${p.o.toLocaleString()}</s>`:''}</div>
+   ${p.clr?`<p class="text-sm bg-rose-50 text-rose-700 rounded-lg p-2">即期出清品：效期尚餘 ${p.d} 天、數量有限，不適用毛幣回饋、定期購與門市寄倉。</p>`:''}
+   <table class="w-full text-sm">${rows.map(r=>`<tr class="border-b"><th class="text-left py-2 pr-3 w-20 text-slate-500 align-top font-semibold">${r[0]}</th><td class="py-2">${r[1]}</td></tr>`).join('')}</table>
+   <label class="block text-xs text-slate-500">購買模式<select onchange="S.pm[${p.id}]=this.value" class="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-sm text-slate-800">${ms.map(m=>`<option ${m==cur?'selected':''}>${m}</option>`).join('')}</select></label>
+   <div class="flex flex-wrap items-center gap-2"><input id="dq" type="number" min="1" value="1" aria-label="數量" class="w-16 text-center rounded-lg border border-slate-200 px-2 py-2"><button ${p.stk>0?'':'disabled'} onclick="add(${p.id},$('dq').value)" class="flex-1 min-w-[140px] py-2.5 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold disabled:opacity-40"><i class="fa-solid fa-cart-plus"></i> ${p.stk>0?'加入購物車':'目前缺貨'}</button><button onclick="fav(${p.id})" class="px-4 py-2.5 rounded-xl border font-bold ${hf?'border-rose-300 text-rose-500 bg-rose-50':'border-slate-300 text-slate-600 hover:bg-slate-50'}"><i class="${hf?'fa-solid':'fa-regular'} fa-heart"></i> ${hf?'已收藏':'收藏'}</button></div>
+  </div></div>
+ ${rel.length?`<section><h2 class="font-extrabold text-lg mb-3">同品類推薦</h2><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">${rel.map(card).join('')}</div></section>`:''}`;
+}
+
+let CO=-1;
+const KI='w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-orange-400';
+const STO=['台中公益店','台北信義店','高雄巨蛋店'];
+const shp=s=>!s||S.dv=='門市自取'||s>=1000?0:S.dv=='超商取貨'?60:100;
+function goCk(){
+ if(!S.cart.length)return T('請先加入商品');
+ if(!U){ST.rs[1]++;sv('sc_st',ST);D(0);AM(1,'in');return T('請先登入會員再結帳')}
+ $('dr').classList.add('translate-x-full');$('ov').classList.add('hidden');CO=-1;go('checkout');
+}
+function tg(k,v){S[k]=v;$('ck').checked=S.coin;$('dn').checked=S.dn;RC()}
+function sD(v){S.dv=v;RKd();RC()}
+function sI(v){S.inv=v;$('kU').classList.toggle('hidden',v!='統編')}
+function RKd(){
+ const r=U.rc||{},d=S.dv;
+ $('kd').innerHTML=d=='宅配到府'?`<input id="kA" placeholder="縣市＋詳細地址" value="${r.dv=='宅配到府'?esc(r.ad||''):''}" class="${KI}">`
+ :d=='超商取貨'?`<div class="grid grid-cols-3 gap-2"><select id="kB" class="${KI}">${['7-ELEVEN','全家','萊爾富','OK mart'].map(x=>`<option>${x}</option>`).join('')}</select><input id="kA" placeholder="門市名稱或店號" class="${KI} col-span-2"></div>`
+ :`<select id="kA" class="${KI}">${STO.map(x=>`<option>${x}</option>`).join('')}</select><p class="text-xs text-slate-500">備貨完成後會通知取貨，請攜帶訂單編號與手機號碼。</p>`;
+}
+function RK(){
+ if(CO>=0){
+  const o=ORD[CO];
+  $('checkout').innerHTML=`<div class="max-w-lg mx-auto bg-white rounded-2xl border border-orange-100 p-6 text-center space-y-3"><div class="text-6xl">🎉</div><h1 class="text-2xl font-extrabold">訂單已成立</h1><p class="text-sm text-slate-600">訂單編號 #${CO+1}｜實付 <b class="text-orange-600">$${o.tot.toLocaleString()}</b>｜獲得毛幣 ${o.rew} 點</p><p class="text-sm text-slate-500">${esc(o.rc.dv)}｜${esc(o.rc.ad)}｜${esc(o.rc.pay)}</p><div class="flex gap-2 justify-center pt-2"><button onclick="MB('o')" class="px-4 py-2 rounded-xl border font-bold hover:bg-slate-50">查看我的訂單</button><button onclick="CO=-1;go('shop')" class="px-4 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold">繼續購物</button></div></div>`;
+  return;
+ }
+ const r=U.rc||{},bx=(t,i,c)=>`<section class="bg-white rounded-xl border border-orange-100 p-4 space-y-3"><h2 class="font-bold"><i class="fa-solid ${i} text-orange-500 mr-2"></i>${t}</h2>${c}</section>`,
+ rd=(nm,o,cur,fn)=>o.map(v=>`<label class="flex items-center gap-2 p-2 rounded-lg border cursor-pointer hover:bg-orange-50 text-sm"><input type="radio" name="${nm}" ${v[0]==cur?'checked':''} onchange="${fn}('${v[0]}')" class="accent-orange-500">${v[1]}</label>`).join('');
+ $('checkout').innerHTML=`<button onclick="go('shop')" class="text-sm text-slate-500 hover:text-orange-600"><i class="fa-solid fa-chevron-left"></i> 繼續購物</button><h1 class="text-2xl font-extrabold">結帳</h1>
+ <div class="grid lg:grid-cols-3 gap-5 items-start"><div class="lg:col-span-2 space-y-4">
+ ${bx('收件資料','fa-user',`<div class="grid sm:grid-cols-2 gap-2"><input id="kN" placeholder="收件人姓名" maxlength="20" value="${esc(r.n||U.n)}" class="${KI}"><input id="kP" type="tel" placeholder="手機（09xxxxxxxx）" maxlength="10" value="${esc(r.ph||'')}" class="${KI}"></div>`)}
+ ${bx('配送方式','fa-truck',rd('kv',[['宅配到府','宅配到府（運費 $100，滿 $1,000 免運）'],['超商取貨','超商取貨（運費 $60，滿 $1,000 免運）'],['門市自取','門市自取（免運費）']],S.dv,'sD')+'<div id="kd" class="space-y-2 pt-1"></div>')}
+ ${bx('付款方式','fa-credit-card',rd('kp',[['信用卡','信用卡（線上刷卡）'],['貨到付款','貨到付款'],['ATM 轉帳','ATM 轉帳（下單後提供匯款帳號）']],S.pay,'S.pay=')+'<p class="text-xs text-slate-400">此為原型示範，不會實際扣款。</p>')}
+ ${bx('發票','fa-file-invoice',rd('ki',[['雲端發票','雲端發票（會員載具）'],['統編','公司統一編號']],S.inv,'sI')+`<input id="kU" maxlength="8" placeholder="統一編號（8 碼）" class="${KI} ${S.inv=='統編'?'':'hidden'}">`)}
+ ${bx('訂單備註','fa-pen',`<textarea id="kT" maxlength="100" rows="2" placeholder="給店家的話（選填）" class="${KI}"></textarea>`)}
+ <label class="flex items-center gap-2 text-sm cursor-pointer"><input type="checkbox" id="kY" class="w-4 h-4 accent-orange-500">我已確認訂單內容與收件資料無誤</label><p id="kE" class="text-red-600 text-sm min-h-[1rem]"></p>
+ </div><div id="ks" class="bg-white rounded-xl border border-orange-100 p-4 lg:sticky lg:top-24"></div></div>`;
+ RKd();RS();
+}
+function RS(){
+ const L=S.cart.map(c=>({...c,p:P.find(x=>x.id==c.id)}));
+ $('ks').innerHTML=`<h2 class="font-bold mb-2"><i class="fa-solid fa-bag-shopping text-orange-500 mr-2"></i>訂單明細</h2>${L.length?L.map(c=>`<div class="flex justify-between gap-2 text-sm py-1.5 border-b"><span class="min-w-0">${c.p.e} ${esc(c.p.n)}<br><span class="text-xs text-slate-500">${c.m} ×${c.q}</span></span><b class="shrink-0">$${(up(c)*c.q).toLocaleString()}</b></div>`).join(''):'<p class="text-center text-slate-400 py-6 text-sm">購物車是空的</p>'}
+ <div class="space-y-1.5 text-sm py-3"><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" ${S.coin?'checked':''} onchange="tg('coin',this.checked)" class="accent-orange-500"><span>使用毛幣折抵（餘額 ${COIN} 點）</span></label><label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" ${S.dn?'checked':''} onchange="tg('dn',this.checked)" class="accent-rose-500"><span>愛心捐罐 +$35</span></label></div>
+ <div class="space-y-1 text-sm">${$('sum').innerHTML}</div>
+ <button onclick="chk()" ${L.length?'':'disabled'} class="w-full mt-3 py-3 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-extrabold disabled:opacity-40">確認送出訂單</button>`;
+}
+function chk(){
+ if(!S.cart.length)return T('請先加入商品');
+ if(!U)return AM(1,'in');
+ const g=i=>$(i).value.trim(),er=$('kE'),bad=m=>{er.textContent=m;er.scrollIntoView({block:'center'})};
+ const n=g('kN'),ph=g('kP'),dv=S.dv,a=g('kA'),ad=((dv=='超商取貨'?g('kB')+' ':'')+a).trim();
+ if(!n)return bad('請填寫收件人姓名');
+ if(!/^09\d{8}$/.test(ph))return bad('手機號碼格式不正確（09 開頭，共 10 碼）');
+ if(!a)return bad(dv=='宅配到府'?'請填寫收件地址':'請填寫取貨門市');
+ if(S.inv=='統編'&&!/^\d{8}$/.test(g('kU')))return bad('統一編號需為 8 碼數字');
+ if(!$('kY').checked)return bad('請先勾選「訂單內容與收件資料無誤」');
+ const lk=S.cart.find(c=>P.find(x=>x.id==c.id).stk<c.q);
+ if(lk)return bad('庫存不足：'+P.find(x=>x.id==lk.id).n);
+ er.textContent='';
+ COIN=COIN-LAST.dc+LAST.rew;U.coin=COIN;U.rc={n,ph,dv,ad:a};sv('sc_users',USERS);RA();
+ ORD.push({s:'待出貨',t:Date.now(),u:U.e,items:S.cart.map(c=>{const p=P.find(x=>x.id==c.id);p.stk-=c.q;return{id:c.id,n:p.n,m:c.m,q:c.q,pr:up({p,m:c.m}),op:p.p,c:p.c,pk:0}}),sub:LAST.sub,dc:LAST.dc,don:LAST.don,ship:LAST.ship,tot:LAST.tot,rew:LAST.rew,rc:{n,ph,dv,ad,pay:S.pay,inv:S.inv=='統編'?'統編 '+g('kU'):S.inv,note:g('kT')}});
+ sv('sc_orders',ORD);sv('sc_prod',P);cf=0;
+ T(`訂單已成立！實付 $${LAST.tot.toLocaleString()}，獲得毛幣 ${LAST.rew} 點`);
+ S.cart=[];S.coin=false;S.dn=false;$('ck').checked=false;$('dn').checked=false;
+ CO=ORD.length-1;RC();RK();window.scrollTo(0,0);
+}
+
+let MT='p',SP=0;
+const IP='mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-orange-400';
+const favL=()=>(U.fav||[]).map(id=>P.find(p=>p.id==id)).filter(Boolean);
+function fav(id){
+ if(!U){AM(1,'in');return T('請先登入才能收藏商品')}
+ const f=U.fav=U.fav||[],i=f.indexOf(id);
+ i>-1?f.splice(i,1):f.push(id);
+ sv('sc_users',USERS);R();
+ if(!$('mb').classList.contains('hidden'))MB();
+ T(i>-1?'已取消收藏':'已加入收藏');
+}
+function MB(t){
+ if(!U)return AM(1,'in');
+ if(t){MT=t;if(t=='p'&&$('mb').classList.contains('hidden'))SP=0}
+ const m=$('mb');m.classList.remove('hidden');m.classList.add('flex');
+ const mine=ORD.filter(o=>o.u==U.e),going=mine.filter(o=>['待出貨','已出貨'].includes(o.s||'待出貨')),done=mine.filter(o=>!going.includes(o)),fv=favL();
+ $('mbT').innerHTML=[['p','👤 個人資料'],['o',`📦 已送出訂單 (${going.length})`],['h',`🧾 訂單紀錄 (${done.length})`],['f',`❤️ 我的收藏 (${fv.length})`]].map(x=>`<button onclick="MB('${x[0]}')" class="${tb(x[0]==MT)}">${x[1]}</button>`).join('');
+ $('mbB').innerHTML=MT=='p'?prof(mine):MT=='o'?OH(going,'目前沒有處理中的訂單',1):MT=='h'?OH(done,'還沒有已完成或已取消的訂單'):favH(fv);
+}
+function MBx(){SP=0;const m=$('mb');m.classList.add('hidden');m.classList.remove('flex')}
+function prof(m){
+ const sp=m.filter(o=>o.s!='已取消').reduce((s,o)=>s+o.sub,0);
+ return `<div class="grid grid-cols-3 gap-2 text-center text-xs text-slate-600"><div class="rounded-xl bg-amber-50 p-3"><p class="text-amber-600 text-lg font-extrabold">${COIN}</p>毛幣點數</div><div class="rounded-xl bg-emerald-50 p-3"><p class="text-emerald-600 text-lg font-extrabold">${m.length}</p>訂單數</div><div class="rounded-xl bg-orange-50 p-3"><p class="text-orange-600 text-lg font-extrabold">$${sp.toLocaleString()}</p>累計消費</div></div>
+ <div class="rounded-xl border p-3 text-sm space-y-2"><p><span class="text-slate-500 inline-block w-14">暱稱</span><b>${esc(U.n)}</b></p><p><span class="text-slate-500 inline-block w-14">帳號</span><b>${esc(U.e)}</b></p><p><span class="text-slate-500 inline-block w-14">密碼</span><b class="font-mono">${SP?esc(U.pw):'•'.repeat(U.pw.length)}</b><button onclick="SP=!SP;MB()" class="ml-3 text-xs text-orange-600 hover:underline"><i class="fa-regular ${SP?'fa-eye-slash':'fa-eye'}"></i> ${SP?'隱藏':'顯示'}</button></p></div>
+ <form onsubmit="saveP(event)" class="rounded-xl border p-3 text-sm space-y-2"><p class="font-bold">修改資料</p><label class="block">暱稱<input id="uN" required maxlength="12" value="${esc(U.n)}" class="${IP}"></label><label class="block">新密碼（不修改請留空）<input id="uP" type="password" minlength="6" autocomplete="new-password" class="${IP}"></label><label class="block">目前密碼（修改密碼時必填）<input id="uO" type="password" autocomplete="current-password" class="${IP}"></label><p id="uE" class="text-red-600 text-xs min-h-[1rem]"></p><button class="w-full py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white font-bold">儲存變更</button></form>`;
+}
+function saveP(ev){
+ ev.preventDefault();
+ const n=$('uN').value.trim(),np=$('uP').value,op=$('uO').value;
+ if(!n)return;
+ if(np){if(op!=U.pw)return $('uE').textContent='目前密碼不正確，無法修改密碼';U.pw=np}
+ U.n=n;sv('sc_users',USERS);RA();AU();MB();T('資料已更新');
+}
+function favH(l){
+ return l.length?l.map(p=>`<div class="flex items-center gap-3 p-3 border rounded-xl"><div class="text-3xl">${p.e}</div><div class="flex-1 min-w-0"><p class="font-bold text-sm">${esc(p.n)}</p><p class="text-xs text-slate-500">${p.stk>0?'庫存 '+p.stk:'<b class="text-red-500">缺貨</b>'}｜<b class="text-orange-600">$${p.p.toLocaleString()}</b></p></div><button onclick="add(${p.id})" aria-label="加入購物車" class="px-3 py-1.5 rounded-lg bg-orange-500 hover:bg-orange-600 text-white text-xs font-bold"><i class="fa-solid fa-cart-plus"></i> 加入</button><button onclick="fav(${p.id})" aria-label="取消收藏" class="px-3 py-1.5 rounded-lg border text-xs text-rose-500 hover:bg-rose-50"><i class="fa-solid fa-heart-crack"></i></button></div>`).join(''):'<p class="text-center text-slate-400 py-10">還沒有收藏商品，點商品圖左上角的 ♥ 就能收藏</p>';
+}
+
+function TB(t){
+ AB=t||AB;
+ ['ov','mem','inv','ord'].forEach(k=>$('t_'+k).classList.toggle('hidden',k!=AB));
+ $('atb').innerHTML=[['ov','📈 數據總覽'],['mem','👥 會員管理'],['inv','📦 庫存管理'],['ord','🧾 訂單管理']].map(x=>`<button onclick="TB('${x[0]}')" class="px-4 py-1.5 rounded-full text-sm font-semibold ${x[0]==AB?'bg-orange-500 text-white':'text-slate-300 hover:text-white'}">${x[1]}</button>`).join('');
+ if(AB=='ov')Object.values(CH).forEach(c=>c.resize());
+}
+
+function AU(){
+ const DB='px-3 py-1.5 rounded-lg text-xs font-bold bg-red-500/20 text-red-300 hover:bg-red-500/40';
+ $('mCnt').textContent=`（共 ${USERS.length} 位）`;
+ $('ml').innerHTML=USERS.map((u,i)=>{
+  const a=ORD.filter(o=>o.u==u.e&&o.s!='已取消'),sp=a.reduce((s,o)=>s+o.sub,0),ad=u.r=='admin';
+  return `<div onclick="MO(USERS[${i}].e)" class="flex flex-wrap items-center gap-3 p-3 rounded-xl bg-slate-700/50 hover:bg-slate-700 cursor-pointer"><div class="w-9 h-9 rounded-full bg-emerald-600 font-bold flex items-center justify-center">${esc(u.n[0])}</div><div class="flex-1 min-w-[140px]"><p class="font-bold text-sm">${esc(u.n)} <span class="text-[10px] px-1.5 py-0.5 rounded-full ${ad?'bg-orange-500':'bg-slate-600'}">${ad?'管理員':'會員'}</span></p><p class="text-xs text-slate-400">${esc(u.e)}</p></div><div class="text-xs text-slate-300 sm:text-right"><p>${a.length} 筆訂單｜累計 $${sp.toLocaleString()}</p><p class="text-amber-400"><i class="fa-solid fa-coins"></i> ${u.coin} 點</p></div>${ad?'':`<button onclick="event.stopPropagation();delM(${i})" class="${DB}"><i class="fa-solid fa-trash"></i> 刪除</button>`}</div>`}).join('');
+ $('il').innerHTML=P.length?P.map(p=>`<tr class="border-t border-slate-700"><td class="p-2">${p.e} ${esc(p.n)}</td><td class="p-2">${p.c}</td><td class="p-2">${p.s}</td><td class="p-2">$${p.p.toLocaleString()}</td><td class="p-2"><input type="number" min="0" value="${p.stk}" onchange="setK(${p.id},this.value)" class="IN w-24 ${p.stk==0?'!border-red-500':p.stk<20?'!border-amber-400':''}"></td><td class="p-2"><button onclick="delP(${p.id})" class="${DB}"><i class="fa-solid fa-trash"></i> 刪除</button></td></tr>`).join(''):'<tr><td colspan="6" class="p-6 text-center text-slate-500">庫存是空的，請先新增商品</td></tr>';
+ $('oc').innerHTML=STS.map(s=>`<span class="px-3 py-1.5 rounded-xl text-sm font-bold ${SB[s]}">${s} ${ORD.filter(o=>(o.s||STS[0])==s).length}</span>`).join('');
+ $('ol').innerHTML=ORD.length?ORD.map((o,i)=>{const st=o.s||STS[0];return `<tr class="border-t border-slate-700"><td class="p-2 font-mono">#${i+1}</td><td class="p-2">${fd(o.t)}</td><td class="p-2">${esc(o.u)}${o.rc?`<div class="text-[11px] text-slate-400">${esc(o.rc.n)} ${esc(o.rc.ph)}｜${esc(o.rc.dv)}｜${esc(o.rc.ad)}</div>`:''}</td><td class="p-2 max-w-xs truncate">${o.items.map(x=>esc(x.n)+' ×'+x.q).join('、')}</td><td class="p-2 font-bold text-orange-400">$${o.tot.toLocaleString()}</td><td class="p-2"><select onchange="setS(${i},this.value)" ${st=='已取消'?'disabled':''} class="IN text-xs">${STS.map(s=>`<option ${s==st?'selected':''}>${s}</option>`).join('')}</select>${o.cr?`<div class="text-[11px] text-slate-400 mt-1">原因：${esc(o.cr)}</div>`:''}</td></tr>`}).reverse().join(''):'<tr><td colspan="6" class="p-6 text-center text-slate-500">尚無訂單</td></tr>';
+}
+
+function addM(ev){
+ ev.preventDefault();
+ const e=$('mE').value.trim().toLowerCase();
+ if(USERS.some(u=>u.e==e))return T('此 Email 已註冊');
+ USERS.push({n:$('mN').value.trim(),e,pw:$('mP').value,coin:+$('mC').value||0,r:'member'});
+ sv('sc_users',USERS);ev.target.reset();$('mC').value=50;AU();T('已新增會員');
+}
+function delM(i){
+ const u=USERS[i];
+ if(!confirm(`確定刪除會員「${u.n}」？其下單紀錄會保留在訂單管理中。`))return;
+ USERS.splice(i,1);sv('sc_users',USERS);AU();T('已刪除會員');
+}
+function addP(ev){
+ ev.preventDefault();
+ const c=$('pC').value,s=$('pS').value,p=+$('pP').value,o=+$('pO').value||p;
+ P.push({id:Date.now(),n:$('pN').value.trim(),c,s,a:'全齡',f:c=='保健'?'腸胃保健':c=='貓砂'?'日用':'日常主食',p,o:Math.max(o,p),u:{乾糧:'每公斤',罐頭:'每罐',貓砂:'每公升',保健:'每錠'}[c],q:+$('pQ').value,d:180,pc:3,i:'—',t:'全齡'+(s=='狗狗'?'犬':'貓'),e:{乾糧:'🦴',罐頭:'🥫',貓砂:'🪣',保健:'💊'}[c],st:c=='保健'?0:1,sub:1,stk:+$('pK').value});
+ sv('sc_prod',P);ev.target.reset();AU();R();T('已新增商品');
+}
+function delP(id){
+ const p=P.find(x=>x.id==id);
+ if(!confirm(`確定從庫存刪除「${p.n}」？`))return;
+ P.splice(P.indexOf(p),1);S.cart=S.cart.filter(c=>c.id!=id);S.cmp=S.cmp.filter(x=>x!=id);
+ sv('sc_prod',P);X.forEach(x=>{x.c=P.some(q=>q.clr==x.b)});RX();AU();R();RC();T('已刪除商品');
+}
+function setK(id,v){P.find(p=>p.id==id).stk=Math.max(0,Math.floor(+v)||0);sv('sc_prod',P);AU();R()}
+function setS(i,v){
+ const o=ORD[i];
+ if(v=='已取消'){cx(o,'管理員取消');R()}
+ o.s=v;sv('sc_orders',ORD);AU();UA();T(`訂單 #${i+1} 已更新為「${v}」`);
+}
+
+function T(m){const t=$('ts');t.textContent=m;t.classList.remove('opacity-0');clearTimeout(tt);tt=setTimeout(()=>t.classList.add('opacity-0'),2000)}
+
+function card(p){
+ const cur=gm(p),pr=Math.round(p.p*(cur==MD[2]?.88:1)),off=Math.round((1-pr/p.o)*100),hf=U&&(U.fav||[]).includes(p.id),inC=S.cmp.includes(p.id),out=p.stk<=0,go_=`go('detail',${p.id})`;
+ return `<article class="group bg-white rounded-2xl border border-slate-200 hover:border-orange-300 hover:shadow-lg transition overflow-hidden flex flex-col">
+ <div onclick="${go_}" class="relative cursor-pointer aspect-[4/3] bg-gradient-to-br ${G[p.c]} flex items-center justify-center text-6xl sm:text-7xl">
+  <span class="transition group-hover:scale-110">${p.e}</span>
+  ${off>0?`<span class="absolute top-2 right-2 bg-red-500 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">-${off}%</span>`:''}
+  <button onclick="event.stopPropagation();fav(${p.id})" aria-label="${hf?'取消收藏':'加入收藏'}" class="absolute top-2 left-2 w-8 h-8 rounded-full bg-white/90 shadow text-base flex items-center justify-center hover:scale-110 transition"><i class="${hf?'fa-solid text-rose-500':'fa-regular text-slate-400'} fa-heart"></i></button>
+  ${p.clr?'<span class="absolute bottom-2 left-2 bg-rose-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-fire"></i> 即期出清</span>':p.rx?'<span class="absolute bottom-2 left-2 bg-slate-700 text-white text-[11px] font-bold px-2 py-0.5 rounded-full"><i class="fa-solid fa-user-doctor"></i> 需處方</span>':''}
+  ${out?'<div class="absolute inset-0 bg-white/65 flex items-center justify-center font-bold text-slate-600">已售完</div>':''}
+ </div>
+ <div class="p-3 flex flex-col gap-1.5 flex-1">
+  <p class="text-[11px] text-slate-400">${p.c}・${p.s}・${p.a}</p>
+  <h3 onclick="${go_}" class="font-bold text-sm leading-snug line-clamp-2 min-h-[2.5rem] cursor-pointer hover:text-orange-600">${p.n}</h3>
+  <div class="flex items-baseline gap-1.5 flex-wrap"><span class="text-xl font-extrabold text-orange-600">$${pr.toLocaleString()}</span>${off>0?`<s class="text-xs text-slate-400">$${p.o.toLocaleString()}</s>`:''}</div>
+  <p class="text-[11px] text-slate-500">${p.u} $${Math.round(pr/p.q)}${cur==MD[2]?'｜定期購 88 折':cur==MD[1]?'｜門市寄倉':''}</p>
+  <div class="flex flex-wrap gap-1 text-[10px] font-semibold">${p.clr?`<span class="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700">效期 ${p.d} 天</span>`:'<span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700">121天效期保證</span>'}${p.pc?`<span class="px-1.5 py-0.5 rounded bg-amber-50 text-amber-700">毛幣 ${p.pc}%</span>`:''}${p.stk>0&&p.stk<20?`<span class="px-1.5 py-0.5 rounded bg-red-50 text-red-600">僅剩 ${p.stk}</span>`:''}</div>
+  <div class="flex gap-2 mt-auto pt-2"><button ${out?'disabled':''} onclick="add(${p.id})" class="flex-1 py-2 rounded-xl bg-orange-500 hover:bg-orange-600 text-white text-sm font-bold disabled:bg-slate-300 disabled:cursor-not-allowed"><i class="fa-solid fa-cart-plus hidden sm:inline"></i> 加入購物車</button><button onclick="cmp(${p.id})" aria-label="${inC?'取消對比':'加入對比'}" title="商品對比" class="${VW!='shop'?'hidden ':''}w-10 shrink-0 rounded-xl border ${inC?'bg-emerald-600 text-white border-emerald-600':'border-slate-300 text-slate-500 hover:border-emerald-600 hover:text-emerald-700'}"><i class="fa-solid fa-scale-balanced"></i></button></div>
+ </div></article>`;
+}
+
+const rsF=()=>{Object.keys(FL).forEach(k=>S[k]=k=='md'?MD[0]:'全部');S.q='';$('qi').value='';S.st=false};
+function clf(k){
+ if(!k)rsF();else if(k=='q'){S.q='';$('qi').value=''}else S[k]=k=='md'?MD[0]:'全部';
+ R();
+}
+function FT(o){$('flt').classList.toggle('hidden',!o);$('fbg').classList.toggle('hidden',!o)}
+function R(){
+ const dk=Object.keys(FL),act=k=>k=='md'?S.md!=MD[0]:S[k]!='全部';
+ const n=(k,v)=>{const o=S[k];S[k]=v;const c=P.filter(ok).length;S[k]=o;return c};
+ const ch=dk.filter(act).map(k=>[k,LB[k]+'：'+S[k]]);if(S.q)ch.push(['q','搜尋：'+S.q]);
+ const nf=ch.length+(S.st?1:0),L=P.filter(ok).sort(SO[S.so][1]);
+ $('flt').innerHTML=`<div class="flex items-center justify-between mb-1"><h2 class="font-extrabold">篩選條件</h2><div class="flex items-center gap-3">${nf?'<button onclick="clf()" class="text-xs text-orange-600 font-bold hover:underline">清除全部</button>':''}<button onclick="FT(0)" aria-label="關閉" class="lg:hidden w-8 h-8 rounded-full hover:bg-slate-100"><i class="fa-solid fa-xmark"></i></button></div></div>`
+ +dk.map(k=>`<div class="py-3 border-t border-slate-100"><p class="text-xs font-bold text-slate-500 mb-2">${LB[k]}</p><div class="flex flex-wrap gap-1.5">${FL[k].map(v=>{const on=S[k]==v,c=n(k,v);return `<button onclick="S.${k}='${v}';R()" ${!on&&!c?'disabled':''} class="px-2.5 py-1 rounded-full text-xs border transition ${on?'bg-orange-500 text-white border-orange-500 font-bold':'bg-white border-slate-200 text-slate-600 hover:border-orange-400 disabled:opacity-35 disabled:hover:border-slate-200'}">${v}${on?'':` <span class="text-slate-400">${c}</span>`}</button>`}).join('')}</div></div>`).join('')
+ +`<button onclick="FT(0)" class="lg:hidden w-full mt-2 py-2.5 rounded-xl bg-orange-500 text-white font-bold">查看 ${L.length} 項商品</button>`;
+ $('cnt').textContent=`共 ${L.length} 項商品`;
+ $('tbr').innerHTML=`<button onclick="FT(1)" class="lg:hidden px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold"><i class="fa-solid fa-sliders"></i> 篩選${nf?` <b class="text-orange-600">${nf}</b>`:''}</button><label class="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 bg-white text-sm cursor-pointer"><input type="checkbox" ${S.st?'checked':''} onchange="S.st=this.checked;R()" class="accent-orange-500">只看有現貨</label><label class="ml-auto flex items-center gap-2 text-sm text-slate-500">排序<select onchange="S.so=this.value;R()" class="rounded-xl border border-slate-200 bg-white px-2 py-2 text-slate-800">${Object.keys(SO).map(k=>`<option value="${k}" ${S.so==k?'selected':''}>${SO[k][0]}</option>`).join('')}</select></label>`;
+ $('chp').innerHTML=ch.length?ch.map(c=>`<button onclick="clf('${c[0]}')" class="px-2.5 py-1 rounded-full bg-orange-100 text-orange-700 text-xs font-semibold hover:bg-orange-200">${esc(c[1])} <i class="fa-solid fa-xmark text-[10px]"></i></button>`).join('')+'<button onclick="clf()" class="text-xs text-slate-500 hover:text-orange-600 px-2">清除全部</button>':'';
+ $('grid').innerHTML=L.length?L.map(card).join(''):`<div class="col-span-full text-center py-16 bg-white rounded-2xl border border-dashed border-slate-300"><div class="text-4xl mb-2">🔍</div><p class="font-bold">找不到符合條件的商品</p><p class="text-sm text-slate-400 mb-3">試著放寬篩選條件看看</p><button onclick="clf()" class="px-4 py-2 rounded-xl bg-orange-500 text-white font-bold text-sm">清除全部篩選</button></div>`;
+ const m=S.cmp.length,b=$('cmpbar');
+ b.classList.toggle('hidden',!m);b.classList.toggle('flex',!!m);
+ $('cmpn').textContent=`已選 ${m}/3 項`;$('cmpgo').disabled=m<2;
+ if(VW=='home')RH();if(VW=='detail')RD();
+}
+
+function cmp(id){
+ const i=S.cmp.indexOf(id);
+ if(i>-1)S.cmp.splice(i,1);else if(S.cmp.length>=3)return T('最多同時對比 3 項商品');else S.cmp.push(id);
+ R();
+}
+
+function CM(o){
+ const m=$('cm');m.classList.toggle('hidden',!o);m.classList.toggle('flex',!!o);
+ if(!o)return;
+ const l=S.cmp.map(i=>P.find(p=>p.id==i)),same=new Set(l.map(p=>p.u)).size==1,min=Math.min(...l.map(p=>p.p/p.q));
+ const rows=[
+  ['商品',p=>`<div class="text-3xl">${p.e}</div><b>${p.n}</b>`],
+  ['售價',p=>'$'+p.p.toLocaleString()],
+  ['單位價格',p=>`${p.u} <b class="text-orange-600">$${Math.round(p.p/p.q)}</b>${same&&p.p/p.q==min?' <span class="text-emerald-600 font-bold">🏆 最划算</span>':''}`],
+  ['成分比對',p=>p.i],
+  ['適用對象',p=>`${p.s}｜${p.a}｜${p.t}`],
+  ['效期／毛幣',p=>`尚餘 ${p.d} 天｜${p.pc}% 回饋`]
+ ];
+ $('ct').innerHTML=`<table class="w-full text-sm border-collapse">${rows.map(r=>`<tr class="border-b"><th class="text-left p-2 w-24 text-slate-500 align-top">${r[0]}</th>${l.map(p=>`<td class="p-2 align-top">${r[1](p)}</td>`).join('')}</tr>`).join('')}</table>`;
+}
+
+function D(o){if(!o&&!$('dr').classList.contains('translate-x-full')&&S.cart.length&&LAST.sub<1000){ST.rs[0]++;sv('sc_st',ST)}$('dr').classList.toggle('translate-x-full',!o);$('ov').classList.toggle('hidden',!o)}
+
+function add(id,n){
+ const p=P.find(x=>x.id==id),m=gm(p),e=S.cart.find(c=>c.id==id&&c.m==m);
+ if(p.stk<=0)return T('此商品目前缺貨');
+ if(!cf){cf=1;ST.carts++;sv('sc_st',ST)}
+ n=Math.max(1,Math.floor(+n)||1);e?e.q+=n:S.cart.push({id,m,q:n});
+ T('已加入購物車：'+p.n);RC();
+}
+function qy(i,d){S.cart[i].q+=d;if(S.cart[i].q<1){S.cart.splice(i,1);ST.rs[2]++;sv('sc_st',ST)}RC()}
+
+function RC(){
+ const L=S.cart.map(c=>({...c,p:P.find(x=>x.id==c.id)}));
+ const sub=L.reduce((s,c)=>s+up(c)*c.q,0),n=L.reduce((s,c)=>s+c.q,0);
+ const rew=Math.round(L.reduce((s,c)=>s+up(c)*c.q*c.p.pc/100,0));
+ const dc=S.coin?Math.min(COIN,sub):0,ship=shp(sub),don=S.dn&&sub?35:0,tot=sub-dc+ship+don;
+ LAST={tot,dc,rew,sub,don,ship};
+ $('bd').textContent=n;$('bd').classList.toggle('hidden',!n);
+ $('cbal').textContent=U?COIN:0;$('ck').disabled=!U;$('chint').textContent=U?'':'（登入後可用）';$('cko').textContent=U?'前往結帳':'登入後結帳';
+ $('ci').innerHTML=L.length?L.map((c,i)=>`<div class="flex gap-3 p-3 rounded-xl border border-orange-100 bg-orange-50/60"><div class="text-3xl">${c.p.e}</div><div class="flex-1 min-w-0"><p class="font-bold text-sm">${c.p.n}</p><p class="text-xs text-emerald-600">${c.m}${c.m==MD[2]?'（88 折）':''}${c.m==MD[1]?'（可跨店分批取貨）':''}</p><div class="flex items-center justify-between mt-1"><div class="flex items-center gap-2"><button onclick="qy(${i},-1)" class="w-6 h-6 rounded-full bg-white border">−</button><span class="w-5 text-center">${c.q}</span><button onclick="qy(${i},1)" class="w-6 h-6 rounded-full bg-white border">＋</button></div><b class="text-orange-600">$${(up(c)*c.q).toLocaleString()}</b></div></div></div>`).join(''):'<p class="text-center text-slate-400 py-16">購物車還是空的，挑幾樣給毛孩吧 🐾</p>';
+ $('pbar').style.width=Math.min(100,sub/10)+'%';
+ $('pmsg').textContent=!sub?'本島滿 $1,000 免運':sub>=1000?'🎉 已達免運門檻！':`還差 $${(1000-sub).toLocaleString()} 即可免運`;
+ $('sum').innerHTML=`<div class="flex justify-between"><span>小計</span><b>$${sub.toLocaleString()}</b></div><div class="flex justify-between text-emerald-600"><span>毛幣折抵</span><b>−$${dc}</b></div><div class="flex justify-between"><span>運費</span><b>${ship?'$'+ship:'免運'}</b></div>${don?'<div class="flex justify-between text-rose-600"><span>愛心捐罐</span><b>$'+don+'</b></div>':''}<div class="flex justify-between text-lg font-extrabold text-orange-600 border-t pt-2"><span>應付總額</span><span>$${tot.toLocaleString()}</span></div><p class="text-xs text-slate-500">本單預計回饋毛幣 ${rew} 點</p>`;
+ if(VW=='checkout'&&CO<0&&$('ks'))RS();
+}
+
+
+const X=[
+{pid:6,b:'B2407-12',n:'鮪魚白身主食罐 ×24',d:119,s:86,p:960},
+{pid:1,b:'B2405-03',n:'無穀鮮雞犬乾糧 6kg',d:98,s:140,p:1260},
+{pid:2,b:'B2404-21',n:'幼貓成長乾糧 2kg',d:76,s:64,p:680},
+{pid:5,b:'B2403-08',n:'雞肉鮮蔬主食罐 ×24',d:52,s:42,p:840},
+{pid:3,b:'B2402-15',n:'熟齡腸胃低敏犬糧 3kg',d:33,s:28,p:980}
+];
+X.forEach(x=>{x.c=P.some(p=>p.clr==x.b)});
+if(!ld('sc_fix1',0)){X.forEach(x=>{const b=P.find(p=>p.id==x.pid);if(b)b.stk=({1:200,2:100,3:50,5:70,6:110})[b.id]-(x.c?x.s:0)});sv('sc_prod',P);sv('sc_fix1',1)}
+function RX(){
+ $('xt').innerHTML=X.map((x,i)=>`<tr class="border-t border-slate-700"><td class="p-2 font-mono">${x.b}</td><td class="p-2">${x.n}</td><td class="p-2 font-bold ${x.d<60?'text-red-400':x.d<100?'text-amber-400':'text-yellow-300'}">${x.d} 天</td><td class="p-2">${x.s}</td><td class="p-2"><s class="text-slate-500">$${x.p}</s> → <b class="text-emerald-400">$${Math.round(x.p*.29)}</b></td><td class="p-2"><span class="px-2 py-0.5 rounded-full text-xs ${x.c?'bg-emerald-500/20 text-emerald-300':'bg-red-500/20 text-red-300'}">${x.c?'已轉入出清區（尚餘 '+((P.find(p=>p.clr==x.b)||{}).stk??0)+'）':'待處理'}</span></td><td class="p-2"><button ${x.c?'disabled':''} onclick="clr(${i})" class="px-3 py-1 rounded-lg text-xs font-bold ${x.c?'bg-slate-600 text-slate-400':'bg-orange-500 hover:bg-orange-600 text-white'}">${x.c?'✓ 已處理':'一鍵轉入 29 折出清區'}</button></td></tr>`).join('');
+ const k=X.filter(x=>x.c);
+ $('xs').textContent=`已轉入 ${k.length}/${X.length} 批｜預估回收 $${k.reduce((s,x)=>s+Math.round(x.p*.29)*x.s,0).toLocaleString()}`;
+}
+function clr(i){
+ const x=X[i],b=P.find(p=>p.id==x.pid);
+ if(!b)return T('找不到對應的一般商品，無法轉入');
+ if(b.stk<x.s)return T(`一般商品庫存 ${b.stk} 件，少於這批 ${x.s} 件，請先到庫存管理補貨再轉入`);
+ b.stk-=x.s;
+ P.push({...b,id:100+i,n:b.n+'【即期出清】',p:Math.round(b.p*.29),o:b.p,d:x.d,pc:0,st:0,sub:0,clr:x.b,stk:x.s});
+ x.c=1;sv('sc_prod',P);RX();AU();R();T(x.n+' 已轉入 29 折出清區，商品頁與庫存已同步');
+}
+
+function initCharts(){
+ if(chd)return;chd=1;
+ Chart.defaults.color='#cbd5e1';Chart.defaults.borderColor='#334155';Chart.defaults.maintainAspectRatio=false;
+ const C=['#f97316','#10b981','#f59e0b','#38bdf8','#fb7185','#a78bfa'],mk=(id,cfg)=>CH[id]=new Chart($(id),cfg);
+ mk('cA',{type:'bar',data:{labels:['5月','6月','7月','8月','9月','10月'],datasets:[
+  {type:'bar',label:'營收（萬）',data:[212,236,251,274,298,318],backgroundColor:C[0],borderRadius:6,yAxisID:'y'},
+  {type:'line',label:'訂單數（百）',data:[20,22,23,25,27,29],borderColor:C[1],backgroundColor:C[1],tension:.35,yAxisID:'y1'}]},
+  options:{scales:{y:{beginAtZero:true},y1:{position:'right',beginAtZero:true,grid:{drawOnChartArea:false}}}}});
+ mk('cB',{type:'doughnut',data:{labels:['忠誠高價值','潛力成長','即將回購','新客','流失風險'],datasets:[{data:[24,28,18,17,13],backgroundColor:C,borderWidth:0}]},options:{cutout:'62%',plugins:{legend:{position:'bottom'}}}});
+ mk('cC',{type:'bar',data:{labels:['乾糧','罐頭','貓砂','保健'],datasets:[
+  {label:'定期購續訂率 %',data:[86,82,78,74],backgroundColor:C[0],borderRadius:6},
+  {label:'門市寄倉提領進度 %',data:[68,74,61,0],backgroundColor:C[1],borderRadius:6}]},
+  options:{scales:{y:{beginAtZero:true,max:100}}}});
+ mk('cD',{type:'bar',data:{labels:['運費超預期','結帳流程過長','無法確認效期','缺少免運提示','找不到規格比較','付款失敗'],datasets:[{data:[34,22,15,12,10,7],backgroundColor:C,borderRadius:6}]},options:{indexAxis:'y',plugins:{legend:{display:false}}}});
+ mk('cE',{type:'pie',data:{labels:['毛幣點數回饋','CSR 愛心捐罐','定期購折扣','其他行銷'],datasets:[{data:[45,25,20,10],backgroundColor:[C[2],C[4],C[0],C[3]],borderWidth:0}]},options:{plugins:{legend:{position:'bottom'}}}});
+}
+
+function setMode(m){
+ const b=m=='b';
+ if(b&&(!U||U.r!='admin')){AM(1,'in');return T('後台僅限管理員登入，可使用示範管理員帳號')}
+ BK=b?1:0;SV();
+ $('sbox').classList.toggle('invisible',b);
+ document.body.className=b?'bg-slate-900 text-slate-100':'bg-orange-50 text-slate-800';
+ 
+ if(b){initCharts();UA();AU();TB();RX()}
+}
+
+$('bF').textContent='🏠 首頁';$('bS').textContent='🛒 全部商品';$('bB').textContent='📊 後台數據分析看板';
+$('ban').innerHTML=[['fa-truck-fast','本島滿 $1,000 免運'],['fa-shield-heart','121天效期品質承諾'],['fa-store','門市跨店分批隨時取'],['fa-rotate','定期購月月送 88 折']].map(b=>`<div class="flex items-center gap-2 text-sm font-semibold"><i class="fa-solid ${b[0]} text-lg"></i>${b[1]}</div>`).join('');
+$('kpi').innerHTML=[['GMV 總營收','NT$ 3,180,000','+12.4%','fa-sack-dollar','text-orange-400'],['平均客單價 AOV','NT$ 1,086','+5.1%','fa-receipt','text-emerald-400'],['轉換率','3.8%','+0.6 pt','fa-bullseye','text-amber-400'],['購物車放棄率','68.2%','−2.3 pt（改善）','fa-cart-arrow-down','text-rose-400']].map(k=>`<div class="bg-slate-800 border border-slate-700 rounded-xl p-4"><div class="flex justify-between items-center text-xs text-slate-400">${k[0]}<i class="fa-solid ${k[3]} ${k[4]} text-lg"></i></div><p class="text-2xl font-extrabold mt-1">${k[1]}</p><p class="text-xs text-emerald-400 mt-1">${k[2]} vs 上月</p></div>`).join('');
+$('cards').innerHTML=[
+ ['cA','A. 銷售與營收趨勢','lg:col-span-2',''],
+ ['cB','B. 會員 RFM 分群與回購週期預測','','<div class="flex flex-wrap gap-1.5 mt-2 text-xs">'+[['乾糧',38],['罐頭',21],['貓砂',26],['保健',45]].map(r=>`<span class="px-2 py-1 rounded-full bg-slate-700">${r[0]} 平均 <b class="text-orange-400">${r[1]}</b> 天回購</span>`).join('')+'</div>'],
+ ['cC','C. 定期購續訂率與門市寄倉提領進度','',''],
+ ['cD','D. 購物車放棄原因與 UX 阻力（%）','',''],
+ ['cE','E. CSR 愛心捐罐與毛幣行銷 ROI','','<p class="text-xs mt-2 text-slate-400">ROI：毛幣 <b class="text-emerald-400">4.2x</b>｜捐罐 <b class="text-emerald-400">2.6x</b>｜定期購 <b class="text-emerald-400">5.1x</b></p>']
+].map(([id,t,sp,x])=>`<div class="bg-slate-800 border border-slate-700 rounded-xl p-4 ${sp}"><h3 class="font-bold text-sm mb-2">${t}</h3><div class="relative h-64"><canvas id="${id}"></canvas><div id="n_${id}" class="absolute inset-0 flex items-center justify-center text-slate-500 text-sm">尚無訂單資料</div></div>${x}</div>`).join('');
+R();RA();RC();RX();RH();setMode('f');
+</script>
+</body>
+</html>
